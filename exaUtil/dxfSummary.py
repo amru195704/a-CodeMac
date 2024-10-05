@@ -20,7 +20,8 @@ import PngUtil
 
 class Window(QDialog):
     global gSearchFld
-
+    global gOutFld
+    
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
         # closeボタン
@@ -29,6 +30,8 @@ class Window(QDialog):
         buttonBox.rejected.connect(self.reject)
         #
         browseButton = self.createButton("フォルダー指定...", self.browse)
+        outBrowseButton = self.createButton("フォルダー指定...", self.outBrowse)  
+        #
         findDxfButton = self.createButton("dxf検索", self.findDxf)
         findPngButton = self.createButton("png検索", self.findPng)
         #
@@ -36,38 +39,42 @@ class Window(QDialog):
         sAllButton = self.createButton("全選択", self.sAll)
         sLayerButton = self.createButton("レイヤー調査", self.sLayer)
         sSymbolButton = self.createButton("シンボル調査", self.sSymbo)
-        sJpgButton = self.createButton("画像変換", self.sJpg)
-
+        sPNGButton = self.createButton("画像変換", self.sPNG)
         #
         self.directoryComboBox = self.createComboBox(QDir.currentPath())
         self.directoryComboBox.resize(500, 16)
-
         directoryLabel = QLabel("検索ルート:")
         directoryLabel.resize(300,16)
         self.filesFoundLabel = QLabel()
         self.filesFoundLabel.resize(400,40)
-
+        #
+        self.outDirectoryComboBox = self.createComboBox(QDir.currentPath())
+        self.outDirectoryComboBox.resize(500, 16)
+        outDirectoryLabel = QLabel("出力ルート:")
+        outDirectoryLabel.resize(300,16)
+        #
         self.createFolderTable()
         #
         findBLayout = QHBoxLayout()
+        findBLayout.addWidget(self.filesFoundLabel)
         findBLayout.addStretch()
         findBLayout.addWidget(findDxfButton)
         findBLayout.addWidget(findPngButton)
         #
-        #resultLayout = QHBoxLayout()
-        #resultLayout.addWidget(self.folderTable)
-        #resultLayout.addWidget(self.resultTable)
         resultLayout = QGridLayout()
         resultLayout.addWidget(self.folderTable, 0, 0, 1,1)
         resultLayout.addWidget(self.resultTable, 0, 2, 1,1)
         #
-        dxfBLayout = QHBoxLayout()
-        dxfBLayout.addWidget(sClearButton)
-        dxfBLayout.addWidget(sAllButton)
-        dxfBLayout.addStretch()
-        dxfBLayout.addWidget(sLayerButton)
-        dxfBLayout.addWidget(sSymbolButton)
-        dxfBLayout.addWidget(sJpgButton)
+        dxfBLayout1 = QHBoxLayout()
+        dxfBLayout1.addWidget(sClearButton)
+        dxfBLayout1.addWidget(sAllButton)
+        dxfBLayout1.addStretch()
+        #
+        dxfBLayout2 = QHBoxLayout()
+        dxfBLayout2.addStretch()
+        dxfBLayout2.addWidget(sLayerButton)
+        dxfBLayout2.addWidget(sSymbolButton)
+        dxfBLayout2.addWidget(sPNGButton)
         # ----- 実際の配置
         execLayout = QGridLayout()
         execLayout.addWidget(directoryLabel, 2, 0)
@@ -76,11 +83,14 @@ class Window(QDialog):
         #
         execLayout.addLayout(findBLayout, 3, 0, 1, 3)
         execLayout.addLayout(resultLayout, 4, 0, 2, 4)
-        #execLayout.addWidget(self.folderTable, 4, 0,2,2)
-        #execLayout.addWidget(self.resultTable, 4, 2,2,4)
         #
-        execLayout.addLayout(dxfBLayout, 6, 0, 1, 3)
-        execLayout.addWidget(self.filesFoundLabel, 7, 0)
+        execLayout.addLayout(dxfBLayout1, 6, 0, 1, 3)       
+        #
+        execLayout.addWidget(outDirectoryLabel, 7, 0)
+        execLayout.addWidget(self.outDirectoryComboBox, 7, 1)
+        execLayout.addWidget(outBrowseButton, 7, 2)   
+        #
+        execLayout.addLayout(dxfBLayout2, 8, 0, 1, 3)   
         #
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(execLayout)
@@ -110,6 +120,26 @@ class Window(QDialog):
 
             self.directoryComboBox.setCurrentIndex(self.directoryComboBox.findText(directory))
             self.directoryComboBox.resize(500,16)
+
+    def outBrowse(self):
+        global gOutFld
+        #
+        if gOutFld is None:
+            directory = QFileDialog.getExistingDirectory(self, "Find Files",
+                                                         QDir.currentPath())
+        else:
+            directory = QFileDialog.getExistingDirectory(self, "Find Files",
+                                                         gOutFld)
+        if directory:
+            if self.outDirectoryComboBox.findText(directory) == -1:
+                self.outDirectoryComboBox.addItem(directory)
+
+            self.outDirectoryComboBox.setCurrentIndex(self.outDirectoryComboBox.findText(directory))
+            self.outDirectoryComboBox.resize(500,16)
+        #
+        print(f"outBrowse:{directory}")
+        gOutFld = directory
+
 
     # ----------------------------------------------------
     #    result clear 表示
@@ -275,7 +305,7 @@ class Window(QDialog):
             row = self.resultTable.rowCount()
             self.resultTable.insertRow(row)
             self.resultTable.setItem(row, 0, noItem)
-            self.resultTable.setItem(row, 1, layerNameItem)
+            self.setItem(row, 1, layerNameItem)
             self.resultTable.setItem(row, 2, sizeItem)
         #
         #
@@ -391,7 +421,10 @@ class Window(QDialog):
         self.canvas.show()
 
 
-    def sJpg(self):
+        # ----------------------------------------------------
+        #    画像変換
+        # ----------------------------------------------------
+    def sPNG(self):
         print("画像変換実行")
         global gSearchFld
         pngSummary = dict()
@@ -419,8 +452,11 @@ class Window(QDialog):
             for (fileName,size) in self.fileSummary[fld.text()]:
                 no += 1
                 dxfFile = f"{gSearchFld}/{fld.text()}/{fileName}"
-                pngName = f"{gSearchFld}/{fld.text()}/{fileName[:-4]}.png"
-                #pngFile = f"{gSearchFld}/{fld.text()}/{pngName}"
+                pngfld = f"{gOutFld}/{fld.text()}/"
+                if not os.path.exists(pngfld):
+                    os.makedirs(pngfld)
+                #              
+                pngName = f"{gOutFld}/{fld.text()}/{fileName[:-4]}.png"
                 #
                 msg = f"画像変換中{no:4} {fileName} --> {pngName}"
                 print(msg)
@@ -482,7 +518,6 @@ class Window(QDialog):
         path = self.directoryComboBox.currentText()
         gSearchFld = path
         self.fileSummary = fileUtil.findAllFiles(path, "*.dxf")
-        # self.updateComboBox(self.directoryComboBox)
         self.showFolders(self.fileSummary)
         # --------------
         #　folder 行をダブルクリックした場合の動作設定
@@ -624,6 +659,7 @@ if __name__ == '__main__':
     import sys
 
     gSearchFld = None
+    gOutFld = None
     app = QApplication(sys.argv)
     window = Window()
     window.show()

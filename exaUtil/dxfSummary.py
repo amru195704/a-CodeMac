@@ -28,54 +28,62 @@ class Window(QDialog):
         buttonBox = QDialogButtonBox(QDialogButtonBox.Close)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
-        #
+        #------ ボタン定義 ------
+        # フォルダー選択
         browseButton = self.createButton("フォルダー指定...", self.browse)
         outBrowseButton = self.createButton("フォルダー指定...", self.outBrowse)  
-        #
+        #　検索ボタン
         findDxfButton = self.createButton("dxf検索", self.findDxf)
         findPngButton = self.createButton("png検索", self.findPng)
-        #
+        #　検索結果処理ボタン
         sClearButton = self.createButton("選択クリアー", self.sClear)
         sAllButton = self.createButton("全選択", self.sAll)
+        sFldListSaveButton = self.createButton("フォルダーリスト保存", self.sFldListSave)
+        sFileListSaveButton = self.createButton("ファイルリスト保存", self.sFileListSave)
+        #　解析ボタン
         sLayerButton = self.createButton("レイヤー調査", self.sLayer)
         sSymbolButton = self.createButton("シンボル調査", self.sSymbo)
-        sPNGButton = self.createButton("画像変換", self.sPNG)
-        #
+        sPNGButton = self.createButton("画像変換", self.sDxf2Png)
+        # 検索ボタン関連
         self.directoryComboBox = self.createComboBox(QDir.currentPath())
         self.directoryComboBox.resize(500, 16)
         directoryLabel = QLabel("検索ルート:")
         directoryLabel.resize(300,16)
-        self.filesFoundLabel = QLabel()
-        self.filesFoundLabel.resize(400,40)
-        #
+        # メッセージラベル
+        self.messageLabel = QLabel()
+        self.messageLabel.resize(400,40)
+        # 保存ボタン関連
         self.outDirectoryComboBox = self.createComboBox(QDir.currentPath())
         self.outDirectoryComboBox.resize(500, 16)
         outDirectoryLabel = QLabel("出力ルート:")
         outDirectoryLabel.resize(300,16)
-        #
+        #　検索結果フォルダー
         self.createFolderTable()
-        #
+        # -------- レイアウト --------
+        #  検索ボタン
         findBLayout = QHBoxLayout()
-        findBLayout.addWidget(self.filesFoundLabel)
+        findBLayout.addWidget(self.messageLabel)
         findBLayout.addStretch()
         findBLayout.addWidget(findDxfButton)
         findBLayout.addWidget(findPngButton)
-        #
+        #　結果表示リスト
         resultLayout = QGridLayout()
         resultLayout.addWidget(self.folderTable, 0, 0, 1,1)
         resultLayout.addWidget(self.resultTable, 0, 2, 1,1)
-        #
+        #　検索結果処理ボタン
         dxfBLayout1 = QHBoxLayout()
         dxfBLayout1.addWidget(sClearButton)
         dxfBLayout1.addWidget(sAllButton)
+        dxfBLayout1.addWidget(sFldListSaveButton)
         dxfBLayout1.addStretch()
-        #
+        dxfBLayout1.addWidget(sFileListSaveButton)
+        #　解析簿ボタン
         dxfBLayout2 = QHBoxLayout()
         dxfBLayout2.addStretch()
         dxfBLayout2.addWidget(sLayerButton)
         dxfBLayout2.addWidget(sSymbolButton)
         dxfBLayout2.addWidget(sPNGButton)
-        # ----- 実際の配置
+        # ----- 実際の配置 -----
         execLayout = QGridLayout()
         execLayout.addWidget(directoryLabel, 2, 0)
         execLayout.addWidget(self.directoryComboBox, 2, 1)
@@ -105,6 +113,9 @@ class Window(QDialog):
         #
         #
 
+    # ----------------------------------------------------
+    #    dxf/png 検索　フォルダー指定
+    # ----------------------------------------------------
     def browse(self):
         global gSearchFld
         #
@@ -121,6 +132,9 @@ class Window(QDialog):
             self.directoryComboBox.setCurrentIndex(self.directoryComboBox.findText(directory))
             self.directoryComboBox.resize(500,16)
 
+    # ----------------------------------------------------
+    #    png 出力　フォルダー指定
+    # ----------------------------------------------------
     def outBrowse(self):
         global gOutFld
         #
@@ -140,7 +154,6 @@ class Window(QDialog):
         print(f"outBrowse:{directory}")
         gOutFld = directory
 
-
     # ----------------------------------------------------
     #    result clear 表示
     # ----------------------------------------------------
@@ -157,9 +170,13 @@ class Window(QDialog):
         print("選択クリアー実行")
         self.folderTable.clearSelection()
 
+    # ----------------------------------------------------
+    #    フォルダー全選択：結果リストに全ファイル表示
+    # ----------------------------------------------------
     def sAll(self):
         print("全選択実行")
         self.folderTable.selectAll()
+        self.showResultFiles(self.fileSummary)
 
     # ----------------------------------------------------
     #    選択ファイル数調査
@@ -179,9 +196,9 @@ class Window(QDialog):
     # ----------------------------------------------------
     #    レイヤー調査
     # ----------------------------------------------------
-        # ----------------------------------------------------
-        #    dxf選択 menu表示
-        # ----------------------------------------------------
+    # ----------------------------------------------------
+    #    dxf選択 menu表示
+    # ----------------------------------------------------
     def showDxfPopupMenu(self, row, column):
         #
         fileName = self.resultTable.item(row, 1)
@@ -203,7 +220,7 @@ class Window(QDialog):
             self.makeCableLink(dxfile)
 
     # ----------------------------------------------------
-    #    dxf選表示
+    #    dxf表示
     # ----------------------------------------------------
     def showDxf(self, dxfile):
         #
@@ -255,7 +272,7 @@ class Window(QDialog):
                 no += 1
                 dxfFile = f"{gSearchFld}/{fld.text()}/{fileName}"
                 msg = f"レイヤー解析中{no:4} {dxfFile}"
-                self.filesFoundLabel.setText(msg)
+                self.messageLabel.setText(msg)
                 print(msg)
                 # ---- progress 表示
                 progressDialog.setValue(no)
@@ -277,7 +294,7 @@ class Window(QDialog):
             if progressDialog.wasCanceled():
                 break
             msg = f"  -->レイヤー解析end{no:4} レイヤー数={len(layerSummary)}"
-            self.filesFoundLabel.setText(msg)
+            self.messageLabel.setText(msg)
         #
         # ---- progress 表示終了
         progressDialog.close()
@@ -310,7 +327,6 @@ class Window(QDialog):
         #
         #
         print("レイヤー調査実行終了")
-
 
     # ----------------------------------------------------
     #    シンボル調査
@@ -345,7 +361,7 @@ class Window(QDialog):
                 dxfFile = f"{gSearchFld}/{fld.text()}/{fileName}"
                 #
                 msg = f"シンボル解析中{no:4} {dxfFile}"
-                self.filesFoundLabel.setText(msg)
+                self.messageLabel.setText(msg)
                 print(msg)
                 # ---- progress 表示
                 progressDialog.setValue(no)
@@ -367,7 +383,7 @@ class Window(QDialog):
             if progressDialog.wasCanceled():
                 break
             msg = f"  -->シンボル解析end{no:4} シンボル数={len(symbolSummary)}"
-            self.filesFoundLabel.setText(msg)
+            self.messageLabel.setText(msg)
             #
         # ---- progress 表示終了
         progressDialog.close()
@@ -401,13 +417,12 @@ class Window(QDialog):
         #
         print("シンボル調査終了")
 
-
     # ----------------------------------------------------
     #    画像変換 調査
     # ----------------------------------------------------
-        # ----------------------------------------------------
-        #    画像選択 png表示
-        # ----------------------------------------------------
+    # ----------------------------------------------------
+    #    画像選択 png表示
+    # ----------------------------------------------------
     def showPng(self, row, column):
         # no = self.folderTable.item(row, 0)
         fileName = self.resultTable.item(row, 1)
@@ -420,11 +435,10 @@ class Window(QDialog):
         self.canvas.viewImageFile(self.resultTable,row,gSearchFld)
         self.canvas.show()
 
-
-        # ----------------------------------------------------
-        #    画像変換
-        # ----------------------------------------------------
-    def sPNG(self):
+    # ----------------------------------------------------
+    #    dxf->png 画像変換
+    # ----------------------------------------------------
+    def sDxf2Png(self):
         print("画像変換実行")
         global gSearchFld
         pngSummary = dict()
@@ -460,7 +474,7 @@ class Window(QDialog):
                 #
                 msg = f"画像変換中{no:4} {fileName} --> {pngName}"
                 print(msg)
-                self.filesFoundLabel.setText(msg)
+                self.messageLabel.setText(msg)
                 # ---- progress 表示
                 progressDialog.setValue(no)
                 progressDialog.setLabelText(f"画像変換 {no}/{maxCnt}")
@@ -503,14 +517,18 @@ class Window(QDialog):
         self.resultTable.cellActivated.connect(self.showPng)
         # --------------
         print("画像変換終了")
-
         
     # ----------------------------------------------------
+    #    ComboBox 追加・更新(同一アイテムなら追加しない)
+    # ----------------------------------------------------    
     @staticmethod
     def updateComboBox(comboBox):
         if comboBox.findText(comboBox.currentText()) == -1:
             comboBox.addItem(comboBox.currentText())
 
+    # ----------------------------------------------------
+    #    dxf検索
+    # ----------------------------------------------------   
     def findDxf(self):
         global gSearchFld
         #
@@ -525,12 +543,13 @@ class Window(QDialog):
         # --------------
         #　result 行をダブルクリックした場合の動作設定
         self.resultTable.cellActivated.connect(self.showDxfPopupMenu)
-
         # --------------
-        #
         self.resultClear()
         #
 
+    # ----------------------------------------------------
+    #    PNG検索
+    # ----------------------------------------------------   
     def findPng(self):
         global gSearchFld
         #
@@ -547,10 +566,12 @@ class Window(QDialog):
         #　result 行をダブルクリックした場合の動作設定
         self.resultTable.cellActivated.connect(self.showPng)
         # --------------
-        #
         self.resultClear()
         #
 
+    # ----------------------------------------------------
+    #    検索結果(folderTable)フォルダー設定&表示
+    # ----------------------------------------------------  
     def showFolders(self, fileSummary):
         no = 0
         for (fld, fileList) in fileSummary.items():
@@ -576,25 +597,24 @@ class Window(QDialog):
 
         #
         msg = "%d フォルダー(s) が見つかりました" % len(fileSummary)
-        self.filesFoundLabel.setText(msg)
+        self.messageLabel.setText(msg)
         #
         reply = QMessageBox.information(self,
                                         "検索終了", msg)
 
-    def createButton(self, text, member):
-        button = QPushButton(text)
-        button.clicked.connect(member)
-        return button
-
-    def createComboBox(self, text=""):
-        comboBox = QComboBox()
-        comboBox.setEditable(True)
-        comboBox.addItem(text)
-        comboBox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        return comboBox
-
+    def sFldListSave(self):
+        print("フォルダーリスト保存")
+        #
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_name, _ = QFileDialog.getSaveFileName(self , 
+                    "ファイル保存", "", "All Files (*);;Text Files (*.csv)", options=options)
+        if file_name:
+            # 選択されたファイルパスを使用してファイルを保存
+            fileUtil.saveFileList(self.folderTable, file_name)
+        
     # ----------------------------------------------------
-    #    フォルダー選択 list表示
+    #    結果(resultTable) リスト設定&表示
     # ----------------------------------------------------
     def updateResultList(self, row, column):
         # no = self.folderTable.item(row, 0)
@@ -626,12 +646,80 @@ class Window(QDialog):
             self.resultTable.setItem(trow, 1, dxfNameItem)
             self.resultTable.setItem(trow, 2, sizeItem)
 
+    def showResultFiles(self, fileSummary):
+        fldCnt = 0
+        fileCnt = 0
+        self.resultTable.setHorizontalHeaderLabels(("No", "ファイル名", "サイズ"))
+        for (fld, fileList) in fileSummary.items():
+            fldCnt += 1
+            #
+            for (fileName,size) in fileList:
+                noItem = QTableWidgetItem(f"{fileCnt}")
+                noItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                noItem.setFlags(noItem.flags() ^ Qt.ItemIsEditable)
+                #
+                filePath=f"{fld}{fileName}"
+                fileNameItem = QTableWidgetItem(filePath)
+                fileNameItem.setFlags(fileNameItem.flags() ^ Qt.ItemIsEditable)
+                # 右側のみ表示＆ツールチップ表示
+                #fileNameItem.setTextElideMode(Qt.ElideLeft)
+                #fileNameItem.setToolTip(filePath)
+                #
+                sizeItem = QTableWidgetItem(f"{size}")
+                sizeItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+                sizeItem.setFlags(sizeItem.flags() ^ Qt.ItemIsEditable)
+
+                self.resultTable.insertRow(fileCnt)
+                self.resultTable.setItem(fileCnt, 0, noItem)
+                self.resultTable.setItem(fileCnt, 1, fileNameItem)
+                self.resultTable.setItem(fileCnt, 2, sizeItem)
+                fileCnt += 1       
+                     
+            print(f"fld={fld} file数={len(fileList)}")
+            msg = f"{fldCnt}::{fileCnt} ファイル(s) が見つかりました"
+            self.messageLabel.setText(msg)
+        #
+        msg = f"{fldCnt}::{fileCnt} ファイル(s) が見つかりました"
+        self.messageLabel.setText(msg)
+        #
+
+    def sFileListSave(self):
+        print("ファイルリスト保存")
+        #
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        file_name, _ = QFileDialog.getSaveFileName(self , 
+                    "ファイル保存", "", "All Files (*);;Text Files (*.csv)", options=options)
+        if file_name:
+            # 選択されたファイルパスを使用してファイルを保存
+            fileUtil.saveFileList(self.resultTable, file_name)
+    # ----------------------------------------------------
+    #    utility ボタン作成とイベント設定
+    # ----------------------------------------------------   
+    def createButton(self, text, member):
+        button = QPushButton(text)
+        button.clicked.connect(member)
+        return button
+
+    # ----------------------------------------------------
+    #    utility コンボボックス作成と初期値設定
+    # ----------------------------------------------------   
+    def createComboBox(self, text=""):
+        comboBox = QComboBox()
+        comboBox.setEditable(True)
+        comboBox.addItem(text)
+        comboBox.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        return comboBox
+
+    # ----------------------------------------------------
+    #    検索・結果 Table設定&表示
+    # ----------------------------------------------------
     def createFolderTable(self):
         self.folderTable = QTableWidget(0, 3)
 
         self.folderTable.setSelectionBehavior(QAbstractItemView.SelectRows)
 
-        self.folderTable.setHorizontalHeaderLabels(("No", "フォルダー", "dxf数"))
+        self.folderTable.setHorizontalHeaderLabels(("No", "フォルダー", "数"))
         #self.folderTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.folderTable.verticalHeader().hide()
         self.folderTable.setShowGrid(False)
@@ -643,7 +731,7 @@ class Window(QDialog):
         self.folderTable.resize(420,400)
         # --------------
         self.resultTable = QTableWidget(0, 3)
-        self.resultTable.setHorizontalHeaderLabels(("No", "res1", "res2"))
+        self.resultTable.setHorizontalHeaderLabels(("No", "ファイル名", "サイズ"))
         #self.resultTable.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
         self.resultTable.verticalHeader().hide()
         self.resultTable.setShowGrid(False)
@@ -653,7 +741,6 @@ class Window(QDialog):
         self.resultTable.setColumnWidth(1, 280)
         self.resultTable.setColumnWidth(2, 80)
         self.resultTable.resize(420,400)
-
 
 if __name__ == '__main__':
     import sys

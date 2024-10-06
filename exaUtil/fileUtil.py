@@ -79,10 +79,23 @@ def symbolDump(dxfFile):
     # ----------------------------------------------------
     #    DXF 画像関連機能
     # ----------------------------------------------------
-
-
 def dxf2png(dxfFile, outpng):
     doc = ezdxf.readfile(dxfFile)
     model = doc.modelspace()
     matplotlib.qsave(model, outpng)
 
+# ----------------------------------------------------
+#   Table項目をcsvファイルに書き込む
+# ----------------------------------------------------
+def saveFileList(fileTable, outPath):
+    with open(outPath, "w") as f:
+        noh=fileTable.takeHorizontalHeaderItem(0).text()
+        nameh=fileTable.takeHorizontalHeaderItem(1).text()
+        etcg=fileTable.takeHorizontalHeaderItem(2).text()
+        f.write(f"{noh},{nameh},{etcg}\n")        
+        for row in range(fileTable.rowCount()):
+            no = fileTable.item(row, 0).text()
+            name = fileTable.item(row, 1).text()
+            etc = fileTable.item(row, 2).text()
+            f.write(f"{no},{name},{etc}\n")
+    return

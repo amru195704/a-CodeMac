@@ -22,7 +22,7 @@ class Dialog(QDialog):
         bigEditor = QLabel("東洋紡のCATV調査用の各機能を起動します。")
         #bigEditor.setPlainText("東洋紡のCATV調査用の各機能を起動します。")
 
-        buttonBox = QDialogButtonBox(QDialogButtonBox.Close)
+        buttonBox = QDialogButtonBox(QDialogButtonBox.close)
         buttonBox.accepted.connect(self.accept)
         buttonBox.rejected.connect(self.reject)
 

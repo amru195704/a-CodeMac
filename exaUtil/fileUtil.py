@@ -94,8 +94,12 @@ def saveFileList(fileTable, outPath):
         etcg=fileTable.takeHorizontalHeaderItem(2).text()
         f.write(f"{noh},{nameh},{etcg}\n")        
         for row in range(fileTable.rowCount()):
-            no = fileTable.item(row, 0).text()
-            name = fileTable.item(row, 1).text()
-            etc = fileTable.item(row, 2).text()
-            f.write(f"{no},{name},{etc}\n")
+            try:
+                no = fileTable.item(row, 0).text()
+                name = fileTable.item(row, 1).text()
+                etc = fileTable.item(row, 2).text()
+                f.write(f"{no},{name},{etc}\n")
+            except Exception as e:
+                print(f"saveFileList:{e}")
+                pass
     return

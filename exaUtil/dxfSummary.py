@@ -16,8 +16,6 @@ import os
 import fileUtil
 import PngUtil
 
-
-
 class Window(QDialog):
     global gSearchFld
     global gOutFld
@@ -40,6 +38,8 @@ class Window(QDialog):
         sAllButton = self.createButton("全選択", self.sAll)
         sFldListSaveButton = self.createButton("フォルダーリスト保存", self.sFldListSave)
         sFileListSaveButton = self.createButton("ファイルリスト保存", self.sFileListSave)
+        sFldClearButton = self.createButton("クリア", self.sFldClear)
+        sFileClearButton = self.createButton("クリア", self.sFileClear)       
         #　解析ボタン
         sLayerButton = self.createButton("レイヤー調査", self.sLayer)
         sSymbolButton = self.createButton("シンボル調査", self.sSymbo)
@@ -75,9 +75,11 @@ class Window(QDialog):
         dxfBLayout1.addWidget(sClearButton)
         dxfBLayout1.addWidget(sAllButton)
         dxfBLayout1.addWidget(sFldListSaveButton)
+        dxfBLayout1.addWidget(sFldClearButton)
         dxfBLayout1.addStretch()
         dxfBLayout1.addWidget(sFileListSaveButton)
-        #　解析簿ボタン
+        dxfBLayout1.addWidget(sFileClearButton)
+        #　解析ボタン
         dxfBLayout2 = QHBoxLayout()
         dxfBLayout2.addStretch()
         dxfBLayout2.addWidget(sLayerButton)
@@ -111,7 +113,6 @@ class Window(QDialog):
         self.canvas = None
         self.setFixedSize(1024, 800)
         #
-        #
 
     # ----------------------------------------------------
     #    dxf/png 検索　フォルダー指定
@@ -119,9 +120,10 @@ class Window(QDialog):
     def browse(self):
         global gSearchFld
         #
+        startDir = f"{QDir.currentPath()}/../"
         if gSearchFld is None:
             directory = QFileDialog.getExistingDirectory(self, "Find Files",
-                                                         QDir.currentPath())
+                                                         startDir)
         else:
             directory = QFileDialog.getExistingDirectory(self, "Find Files",
                                                          gSearchFld)
@@ -138,9 +140,10 @@ class Window(QDialog):
     def outBrowse(self):
         global gOutFld
         #
+        startDir = f"{QDir.currentPath()}/../"
         if gOutFld is None:
             directory = QFileDialog.getExistingDirectory(self, "Find Files",
-                                                         QDir.currentPath())
+                                                         startDir)
         else:
             directory = QFileDialog.getExistingDirectory(self, "Find Files",
                                                          gOutFld)
@@ -426,6 +429,8 @@ class Window(QDialog):
     def showPng(self, row, column):
         # no = self.folderTable.item(row, 0)
         fileName = self.resultTable.item(row, 1)
+        if fileName.text().find(".png") < 0:
+            return
         # cnt = self.folderTable.item(row, 2)
         pngFile = f"{gSearchFld}/{fileName.text()}"
         print(f"選択:{pngFile}")
@@ -613,6 +618,11 @@ class Window(QDialog):
             # 選択されたファイルパスを使用してファイルを保存
             fileUtil.saveFileList(self.folderTable, file_name)
         
+    def sFldClear(self):
+        print("フォルダークリアー実行")
+        self.folderTable.clear()
+        self.sFileClear()
+    
     # ----------------------------------------------------
     #    結果(resultTable) リスト設定&表示
     # ----------------------------------------------------
@@ -632,8 +642,8 @@ class Window(QDialog):
             noItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
             noItem.setFlags(noItem.flags() ^ Qt.ItemIsEditable)
             #
-            resultName = f"{fld.text()}/{fileName}"
-            dxfNameItem = QTableWidgetItem(resultName)
+            resultPath = f"{fld.text()}/{fileName}"
+            dxfNameItem = QTableWidgetItem(resultPath)
             dxfNameItem.setFlags(dxfNameItem.flags() ^ Qt.ItemIsEditable)
             #
             sizeItem = QTableWidgetItem("%d KB" % (int((size + 1023) / 1024)))
@@ -645,7 +655,10 @@ class Window(QDialog):
             self.resultTable.setItem(trow, 0, noItem)
             self.resultTable.setItem(trow, 1, dxfNameItem)
             self.resultTable.setItem(trow, 2, sizeItem)
-
+                # --------------
+        #　result 行をダブルクリックした場合の動作設定
+        self.resultTable.cellActivated.connect(self.showPng)
+        
     def showResultFiles(self, fileSummary):
         fldCnt = 0
         fileCnt = 0
@@ -658,8 +671,8 @@ class Window(QDialog):
                 noItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
                 noItem.setFlags(noItem.flags() ^ Qt.ItemIsEditable)
                 #
-                filePath=f"{fld}{fileName}"
-                fileNameItem = QTableWidgetItem(filePath)
+                resultPath=f"{fld}/{fileName}"
+                fileNameItem = QTableWidgetItem(resultPath)
                 fileNameItem.setFlags(fileNameItem.flags() ^ Qt.ItemIsEditable)
                 # 右側のみ表示＆ツールチップ表示
                 #fileNameItem.setTextElideMode(Qt.ElideLeft)
@@ -682,6 +695,9 @@ class Window(QDialog):
         msg = f"{fldCnt}::{fileCnt} ファイル(s) が見つかりました"
         self.messageLabel.setText(msg)
         #
+        # --------------
+        #　result 行をダブルクリックした場合の動作設定
+        self.resultTable.cellActivated.connect(self.showPng)
 
     def sFileListSave(self):
         print("ファイルリスト保存")
@@ -693,6 +709,11 @@ class Window(QDialog):
         if file_name:
             # 選択されたファイルパスを使用してファイルを保存
             fileUtil.saveFileList(self.resultTable, file_name)
+
+    def sFileClear(self):
+        print("結果リストクリアー実行")
+        self.resultTable.clear()
+
     # ----------------------------------------------------
     #    utility ボタン作成とイベント設定
     # ----------------------------------------------------   

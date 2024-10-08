@@ -1,5 +1,5 @@
 import time
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import (QDir, Qt)
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget,  QFileDialog,  QGraphicsView, \
     QGraphicsScene, QHBoxLayout, QGroupBox, QPushButton, QVBoxLayout,QLabel
 from PyQt5 import QtGui
@@ -139,22 +139,13 @@ class PngCanvas(QWidget):
     #-----------------------
     # 画像fit/zoom共通処理
     def viewZoom(self):
-        magx = float(self.view.width() - 20) / self.pixmap.width()
-        magy = float(self.view.height() - 20) / self.pixmap.height()
-        if magx < 1.0:
-            if magx < magy:
-                mag = magy
-            else:
-                mag = magx
-        else:
-            if magx < magy:
-                mag = magx
-            else:
-                mag = magy
+        self.pixmap = self.orgPixmap
         #
-        sw = int(self.view.width() * mag*self.zoomScale)
-        sh = int(self.view.height() * mag*self.zoomScale)
+        (_,sw,sh) = self.calcMag(self.pixmap)
+        #
         self.view.resize(sw, sh)
+        self.view.scale(self.zoomScale,self.zoomScale)
+
 
      #-----------------------
  
@@ -168,6 +159,9 @@ class PngCanvas(QWidget):
         # pixmapをsceneに追加
         self.scene.clear()
         self.scene.addPixmap(self.pixmap)
+        #
+        self.zoomScale = 1.0
+        self.view.scale(1.0,1.0)
         # ウィジェットを更新
         self.update()
         #
@@ -175,7 +169,8 @@ class PngCanvas(QWidget):
     #-----------------------
     # 画像ファイルを開く
     def pngOpenFile(self):
-        self.filepath = QFileDialog.getOpenFileName(self, 'open file', '', 'Images (*.png)')[0]
+        startDir = f"{QDir.currentPath()}/../"
+        self.filepath = QFileDialog.getOpenFileName(self, 'open file', startDir, 'Images (*.png)')[0]
         if self.filepath:
             if self.setImage(self.filepath):
                 self.pngFit()
@@ -197,25 +192,31 @@ class PngCanvas(QWidget):
 
         return True
 
-    #---------------------------------
-    #   pixmap zoom
-    def fitImage(self,imPixmap):
-        self.setFixedSize(1024, 800)
-        #
-        magx = float(self.view.width() - 20) / imPixmap.width()
-        magy = float(self.view.height() -20) / imPixmap.height()
+    def calcMag(self,pixmap):
+        magx = float(self.view.width() - 20) / pixmap.width()
+        magy = float(self.view.height() - 20) / pixmap.height()
         if magx < 1.0:
             if magx < magy:
-                mag = magx
-            else:
                 mag = magy
+            else:
+                mag = magx
         else:
             if magx < magy:
                 mag = magy
             else:
                 mag = magx
-        sw = imPixmap.width() * mag
-        sh = imPixmap.height() * mag
+        #
+        sw = int(pixmap.width() * mag)
+        sh = int(pixmap.height() * mag)
+        return (mag,sw,sh)
+
+    #---------------------------------
+    #   pixmap zoom
+    def fitImage(self,imPixmap):
+        self.setFixedSize(1024, 800)
+        #
+        (_,sw,sh) = self.calcMag(imPixmap)
+        #
         outPixmap = imPixmap.scaled(int(sw),int(sh))
         return outPixmap
 

@@ -34,7 +34,8 @@ def attrDump(e):
     for atr in e.attribs:
         if len(atr.dxf.text) > 0:
             print(
-                f"       Lay({atr.dxf.layer}) Tag({atr.dxf.tag}) Txt({atr.dxf.text}) xya({atr.dxf.insert.vec2.x},{atr.dxf.insert.vec2.y},{atr.dxf.insert.angle_deg})")
+                f"       Lay({atr.dxf.layer}) Tag({atr.dxf.tag}) Txt({atr.dxf.text}) "
+                f"xya({atr.dxf.insert.vec2.x},{atr.dxf.insert.vec2.y},{atr.dxf.rotation})")
 
 
 def insertDump(msp,GET_LAYER):
@@ -62,7 +63,8 @@ def textDump(msp,GET_LAYER):
             continue
         if e.DXFTYPE=="TEXT":
             no += 1
-            print(f"{no} handle({e}) Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.insert.angle_deg})")
+            print(f"{no} handle({e}) Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
+                  f"xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")
     print()
 
 def lineDump(msp,GET_LAYER):
@@ -113,7 +115,8 @@ def mtextDump(msp,GET_LAYER):
             continue
         if e.DXFTYPE=="MTEXT":
             no += 1
-            print(f"{no} handle({e}) Lay({e.dxf.layer}) Txt({e.text}) xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.insert.angle_deg})")
+            print(f"{no} handle({e}) Lay({e.dxf.layer}) Txt({e.text}) "
+                  f"xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.})")
     print()
 
 def pointDump(msp,GET_LAYER):
@@ -124,7 +127,7 @@ def pointDump(msp,GET_LAYER):
             continue
         if e.DXFTYPE=="POINT":
             no += 1
-            print(f"{no} handle({e}) Lay({e.dxf.layer}) xya({e.dxf.location.x},{e.dxf.location.y},{e.dxf.location.angle_deg})")
+            print(f"{no} handle({e}) Lay({e.dxf.layer}) xya({e.dxf.location.x},{e.dxf.location.y},{e.dxf.rotation})")
     print()
 
 def dumpCableData(title,insPontList,insList,linePontList,lineList,lwpPontList,lwpList):

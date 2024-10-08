@@ -325,7 +325,7 @@ class Window(QDialog):
             row = self.resultTable.rowCount()
             self.resultTable.insertRow(row)
             self.resultTable.setItem(row, 0, noItem)
-            self.setItem(row, 1, layerNameItem)
+            self.resultTable.setItem(row, 1, layerNameItem)
             self.resultTable.setItem(row, 2, sizeItem)
         #
         #

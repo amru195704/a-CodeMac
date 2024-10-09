@@ -22,33 +22,39 @@ def blockDump(dxfFile):
     doc = ezdxf.readfile(dxfFile)
     insertTbl = getInstalNameTable(doc)
     keySorted = sorted(insertTbl.items(), key=lambda x: x[0])
-    no=0
+    bno=0
     filePrint(f"-------------- BLOCKサマリー ----------")
     for (blockName,cnt) in keySorted:
-        filePrint(f"-------------- BLOCK ={blockName} : {cnt} ----------")
+        bno
+        filePrint(f"-------------- BLOCK{bno} ={blockName} : {cnt} ----------")
         # ブロック定義を取得
         block_def = doc.blocks[blockName]
         # ブロック内のエンティティを調べる
+        no = 0
         for e in block_def:
             no += 1
             if e.DXFTYPE=="INSERT":
-                filePrint(f"{no} INSERT Lay({e.dxf.layer}) name:{e.dxf.name} "
+                filePrint(f" {no} INSERT Lay({e.dxf.layer}) name:{e.dxf.name} "
                       f"xya:{e.dxf.insert.vec2.x},{e.dxf.insert.vec2.y},{e.dxf.rotation}")
             elif e.DXFTYPE=="TEXT":
-                filePrint(f"{no} TEXT Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
+                filePrint(f" {no} TEXT Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
                       f"xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")
             elif e.DXFTYPE=="LINE":
-                filePrint(f"{no} LINE Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
+                filePrint(f" {no} LINE Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
             elif e.DXFTYPE=="LWPOLYLINE":
                 pts = e.lwpoints.values
-                filePrint(f"{no} LWPOLYLINE Lay({e.dxf.layer}) Pts({list(pts)})")     
+                filePrint(f" {no} LWPOLYLINE Lay({e.dxf.layer}) Pts({list(pts)})")     
             elif e.DXFTYPE=="MTEXT":
-                filePrint(f"{no} MTEXT Lay({e.dxf.layer}) Txt({e.text}) "
+                filePrint(f" {no} MTEXT Lay({e.dxf.layer}) Txt({e.text}) "
                       f"({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")     
             elif e.DXFTYPE=="POINT":
-                filePrint(f"{no} POINT Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y})")
+                filePrint(f" {no} POINT Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y})")
             elif e.DXFTYPE=="CIRCLE":
-                filePrint(f"{no} CIRCLE Lay({e.dxf.layer}) ({e.dxf.center.x},{e.dxf.center.y},{e.dxf.radius})")  
+                filePrint(f" {no} CIRCLE Lay({e.dxf.layer}) ({e.dxf.center.x},{e.dxf.center.y},{e.dxf.radius})")  
+            elif e.DXFTYPE=="ATTDEF":
+                filePrint(f" {no} ATTDEF Lay({e.dxf.layer}) tag({e.dxf.tag}) {e.dxf.text}")
+            else:
+                filePrint(f" {no} {e.DXFTYPE} Lay({e.dxf.layer})")
             #if e.DXFTYPE!="TEXT":                     
             #    for atr in e.attribs:
             #        if len(atr.dxf.text)>0:

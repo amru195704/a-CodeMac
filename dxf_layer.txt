@@ -1,0 +1,2 @@
+-------------- 1 : sample/(3)-MA011@Aエリア＠CL_CLT-4＠48＠1744D5.dwg ----------
+mainDump:File 'sample/(3)-MA011@Aエリア＠CL_CLT-4＠48＠1744D5.dwg' is not a DXF file.

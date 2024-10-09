@@ -75,7 +75,7 @@ def mtextDump(msp):
         if e.DXFTYPE=="MTEXT":
             no += 1
             filePrint(f"{no} Lay({e.dxf.layer}) Txt({e.text}) "
-                      "({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.})")
+                      f"({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.})")
     filePrint(" ")
 
 def pointDump(msp):
@@ -84,7 +84,7 @@ def pointDump(msp):
     for e in msp:
         if e.DXFTYPE=="POINT":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y},{e.dxf.location.angle_deg})")
+            filePrint(f"{no} Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y},{e.dxf.rotation})")
     filePrint(" ")
 
 def entityDump(dxfFile):

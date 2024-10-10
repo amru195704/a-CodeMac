@@ -18,15 +18,14 @@ def getInstalNameTable(doc):
     #
     return insertTbl
 
-def blockDump(dxfFile):
-    doc = ezdxf.readfile(dxfFile)
+def oneFileBlcokDump(doc,dmpF):
     insertTbl = getInstalNameTable(doc)
     keySorted = sorted(insertTbl.items(), key=lambda x: x[0])
     bno=0
-    filePrint(f"-------------- BLOCKサマリー ----------")
+    filePrint(dmpF,f"-------------- BLOCKサマリー ----------")
     for (blockName,cnt) in keySorted:
         bno
-        filePrint(f"-------------- BLOCK{bno} ={blockName} : {cnt} ----------")
+        filePrint(dmpF,f"-------------- BLOCK{bno} ={blockName} : {cnt} ----------")
         # ブロック定義を取得
         block_def = doc.blocks[blockName]
         # ブロック内のエンティティを調べる
@@ -34,61 +33,61 @@ def blockDump(dxfFile):
         for e in block_def:
             no += 1
             if e.DXFTYPE=="INSERT":
-                filePrint(f" {no} INSERT Lay({e.dxf.layer}) name:{e.dxf.name} "
+                filePrint(dmpF,f" {no} INSERT Lay({e.dxf.layer}) name:{e.dxf.name} "
                       f"xya:{e.dxf.insert.vec2.x},{e.dxf.insert.vec2.y},{e.dxf.rotation}")
             elif e.DXFTYPE=="TEXT":
-                filePrint(f" {no} TEXT Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
+                filePrint(dmpF,f" {no} TEXT Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
                       f"xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")
             elif e.DXFTYPE=="LINE":
-                filePrint(f" {no} LINE Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
+                filePrint(dmpF,f" {no} LINE Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
             elif e.DXFTYPE=="LWPOLYLINE":
                 pts = e.lwpoints.values
-                filePrint(f" {no} LWPOLYLINE Lay({e.dxf.layer}) Pts({list(pts)})")     
+                filePrint(dmpF,f" {no} LWPOLYLINE Lay({e.dxf.layer}) Pts({list(pts)})")     
             elif e.DXFTYPE=="MTEXT":
-                filePrint(f" {no} MTEXT Lay({e.dxf.layer}) Txt({e.text}) "
+                filePrint(dmpF,f" {no} MTEXT Lay({e.dxf.layer}) Txt({e.text}) "
                       f"({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")     
             elif e.DXFTYPE=="POINT":
-                filePrint(f" {no} POINT Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y})")
+                filePrint(dmpF,f" {no} POINT Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y})")
             elif e.DXFTYPE=="CIRCLE":
-                filePrint(f" {no} CIRCLE Lay({e.dxf.layer}) ({e.dxf.center.x},{e.dxf.center.y},{e.dxf.radius})")  
+                filePrint(dmpF,f" {no} CIRCLE Lay({e.dxf.layer}) ({e.dxf.center.x},{e.dxf.center.y},{e.dxf.radius})")  
             elif e.DXFTYPE=="ATTDEF":
-                filePrint(f" {no} ATTDEF Lay({e.dxf.layer}) tag({e.dxf.tag}) {e.dxf.text}")
+                filePrint(dmpF,f" {no} ATTDEF Lay({e.dxf.layer}) tag({e.dxf.tag}) {e.dxf.text}")
             else:
-                filePrint(f" {no} {e.DXFTYPE} Lay({e.dxf.layer})")
+                filePrint(dmpF,f" {no} {e.DXFTYPE} Lay({e.dxf.layer})")
             #if e.DXFTYPE!="TEXT":                     
             #    for atr in e.attribs:
             #        if len(atr.dxf.text)>0:
-            #            filePrint(f"       l({atr.dxf.layer}) {atr.dxf.tag}={atr.dxf.text} "
+            #            filePrint(dmpF,f"       l({atr.dxf.layer}) {atr.dxf.tag}={atr.dxf.text} "
             #                    f"xya:{atr.dxf.insert.vec2.x},{atr.dxf.insert.vec2.y},{atr.dxf.rotation}")
     #
     return
 
-def mainDump(dxfPat):
+def mainDump(dxfPat,dmpFile="dxf_block.txt"):
     global gDumpF
-    gDumpF =  open("dxf_block.txt", "w") 
     blockSummary = dict()
+    gDumpF =  open(dmpFile, "w") 
     cnt=0
     for dxfFile in glob.glob(dxfPat):
         cnt +=1
-        filePrint(f"-------------- {cnt} : {dxfFile} ----------")
+        filePrint(gDumpF,f"-------------- {cnt} : {dxfFile} ----------")
+        doc = ezdxf.readfile(dxfFile)
         try:
-            blockDump(dxfFile)
+            oneFileBlcokDump(doc,gDumpF)
         except Exception as e:
-            filePrint(f"mainDump:{e}")
+            filePrint(gDumpF,f"mainDump:{e}")
             pass
 
     keySorted = sorted(blockSummary.items(), key=lambda x: x[0])
     no=0
     for (key,value) in keySorted:
         no +=1
-        filePrint(f"block{no}={key} : {value}")
+        filePrint(dmpF,f"block{no}={key} : {value}")
     #
     gDumpF.close()
 
-def filePrint(str):
-    global gDumpF
+def filePrint(dmpF,str):
     print(str)
-    gDumpF.write(str + "\n")
+    dmpF.write(str + "\n")
 
 if __name__ == '__main__':
     print(os.getcwd())

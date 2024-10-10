@@ -8,6 +8,8 @@ from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QComboBox,
                              QTableWidgetItem, QMessageBox, QMenu)
 
 import sys
+
+import ezdxf
 sys.path.append(".")
 sys.path.append("exaUtil")
 import subprocess
@@ -15,6 +17,14 @@ import os
 
 import fileUtil
 import PngUtil
+#
+import exaUtil.dxf_blockDump
+import exaUtil.dxf_entityDump
+#import exaUtil.dxf_insertDump
+#import exaUtil.dxf_layerDump
+#import exaUtil.dxf_symbolDump
+#import exaUtil.makeCableLink
+
 
 class Window(QDialog):
     global gSearchFld
@@ -44,6 +54,11 @@ class Window(QDialog):
         sLayerButton = self.createButton("レイヤー調査", self.sLayer)
         sSymbolButton = self.createButton("シンボル調査", self.sSymbo)
         sPNGButton = self.createButton("画像変換", self.sDxf2Png)
+        # 詳細調査ボタン
+        sDumpButton = self.createButton("ダンプ調査", self.sDump)
+        sLinkButton = self.createButton("リンク調査", self.sLink)
+         
+        #----------------------------------------------------------------
         # 検索ボタン関連
         self.directoryComboBox = self.createComboBox(QDir.currentPath())
         self.directoryComboBox.resize(500, 16)
@@ -85,6 +100,11 @@ class Window(QDialog):
         dxfBLayout2.addWidget(sLayerButton)
         dxfBLayout2.addWidget(sSymbolButton)
         dxfBLayout2.addWidget(sPNGButton)
+        # 詳細調査ボタン
+        dxfBLayout3 = QHBoxLayout()
+        dxfBLayout3.addStretch()
+        dxfBLayout3.addWidget(sDumpButton)
+        dxfBLayout3.addWidget(sLinkButton)       
         # ----- 実際の配置 -----
         execLayout = QGridLayout()
         execLayout.addWidget(directoryLabel, 2, 0)
@@ -101,6 +121,7 @@ class Window(QDialog):
         execLayout.addWidget(outBrowseButton, 7, 2)   
         #
         execLayout.addLayout(dxfBLayout2, 8, 0, 1, 3)   
+        execLayout.addLayout(dxfBLayout3, 9, 0, 1, 3)   
         #
         mainLayout = QVBoxLayout()
         mainLayout.addLayout(execLayout)
@@ -420,6 +441,103 @@ class Window(QDialog):
         #
         print("シンボル調査終了")
 
+    # ----------------------------------------------------
+    #    詳細調査(dump)
+    # ----------------------------------------------------
+    def sDump(self):
+        print("ダンプ実行")
+        global gSearchFld
+        dumpSummary = dict()
+        #
+        #--- 調査対象ファイル数計算
+        maxCnt = self.selectDxfFileCount()
+        #---- progress バー作成
+        progressDialog = QProgressDialog(self)
+        progressDialog.setCancelButtonText("&Cancel")
+        progressDialog.setRange(0, maxCnt)
+        progressDialog.setWindowTitle("ダンプ調査")
+        progressDialog.setMinimumWidth(500)
+        progressDialog.show()
+        #
+        no = 0
+        for item in self.folderTable.selectedItems():
+            row = item.row()
+            col = item.column()
+            if col != 1:
+                continue
+            # no = self.folderTable.item(row, 0)
+            fld = self.folderTable.item(row, 1)
+            print(f"選択:{fld.text()}")
+            # cnt = self.folderTable.item(row, 2)
+            for (fileName,size) in self.fileSummary[fld.text()]:
+                no += 1
+                dxfFile = f"{gSearchFld}/{fld.text()}/{fileName}"
+                dumpfld = f"{gOutFld}/{fld.text()}/"
+                if not os.path.exists(dumpfld):
+                    os.makedirs(dumpfld)
+                #              
+                dumpName = f"{gOutFld}/{fld.text()}/{fileName[:-4]}.dmp"
+                #
+                msg = f"ダンプ中{no:4} {fileName} --> {dumpName}"
+                print(msg)
+                self.messageLabel.setText(msg)
+                # ---- progress 表示
+                progressDialog.setValue(no)
+                progressDialog.setLabelText(f"ダンプ {no}/{maxCnt}")
+                QApplication.processEvents()
+                # ---- progress 表示終了
+                if progressDialog.wasCanceled():
+                    break
+                #
+                self.dumpAll(dxfFile, dumpName)
+                dumpSummary[no] = dumpName
+            #
+            # ---- progress 表示終了
+            if progressDialog.wasCanceled():
+                break
+        # ---- progress 表示終了
+        progressDialog.close()
+        #
+        print("ダンプ結果表示")
+        #
+        self.resultClear()
+        #
+        self.resultTable.setHorizontalHeaderLabels(("No", "ダンプ名", "---"))
+        for (lno, dumpName) in dumpSummary.items():
+            noItem = QTableWidgetItem(f"{lno}")
+            noItem.setTextAlignment(Qt.AlignVCenter | Qt.AlignRight)
+            noItem.setFlags(noItem.flags() ^ Qt.ItemIsEditable)
+            #
+            dumpNameItem = QTableWidgetItem(dumpName)
+            dumpNameItem.setFlags(dumpNameItem.flags() ^ Qt.ItemIsEditable)
+            #
+            print(f"---- {lno} {dumpName}")
+            #
+            row = self.resultTable.rowCount()
+            self.resultTable.insertRow(row)
+            self.resultTable.setItem(row, 0, noItem)
+            self.resultTable.setItem(row, 1, dumpNameItem)
+        #
+        # --------------
+        #　result 行をダブルクリックした場合の動作設定
+        self.resultTable.cellActivated.connect(self.showPng)
+        # --------------
+        print("ダンプ終了")
+
+    def dumpAll(self,dxfFile, dumpName):
+        doc = ezdxf.readfile(dxfFile)
+        dmpF =  open(dumpName, "w") 
+        #
+        exaUtil.dxf_blockDump.filePrint(dmpF,f"============== {dxfFile} ================================\n")
+        exaUtil.dxf_blockDump.oneFileBlcokDump(doc, dmpF)
+        exaUtil.dxf_entityDump.oneFileEntityDump(doc, dmpF)        
+
+    # ----------------------------------------------------
+    #    詳細調査(link)
+    # ----------------------------------------------------
+    def sLink(self):
+        print("リンク実行")
+    
     # ----------------------------------------------------
     #    画像変換 調査
     # ----------------------------------------------------

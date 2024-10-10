@@ -52,13 +52,13 @@ class Dialog(QDialog):
         layout.addWidget(btnDxfSummary)
         btnDxfSummary.clicked.connect(self.dxfSummary)
         #
-        btnDxfLayer = QPushButton("--DXFレイヤー調査")
-        layout.addWidget(btnDxfLayer)
-        btnDxfLayer.clicked.connect(self.dxfLayer)
+        btnDxfDump = QPushButton("DXFダンプ調査")
+        layout.addWidget(btnDxfDump)
+        btnDxfDump.clicked.connect(self.dxfDump)
         #
-        btnDxfSymbol = QPushButton("--DXFシンボル調査")
-        layout.addWidget(btnDxfSymbol)
-        btnDxfSymbol.clicked.connect(self.dxfSymbol)
+        btnDxfLink = QPushButton("DXFケーブルリンク調査")
+        layout.addWidget(btnDxfLink)
+        btnDxfLink.clicked.connect(self.dxfLink)
         #
         self.virticalGroupBox.setLayout(layout)
 
@@ -67,11 +67,11 @@ class Dialog(QDialog):
         rtn = subprocess.Popen(['python', 'exaUtil/dxfSummary.py'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         print(f"rtn={rtn}")
 
-    def dxfLayer(self):
-        print("dxfLayer")
+    def dxfDump(self):
+        print("dxfDump")        
 
-    def dxfSymbol(self):
-        print("dxfSymbol")
+    def dxfLink(self):
+        print("dxfLink")
 
 if __name__ == '__main__':
 

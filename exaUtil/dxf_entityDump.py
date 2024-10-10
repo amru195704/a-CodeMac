@@ -4,10 +4,10 @@ import ezdxf
 import glob
 import time
 
-def summaryDump(msp):
+def summaryDump(msp,dmpF):
     entityTbl = dict()
     no=0
-    filePrint(f"#-------------- 図形サマリー ----------")
+    filePrint(dmpF,f"#-------------- 図形サマリー ----------")
     for e in msp:
         if e.DXFTYPE in entityTbl:
             entityTbl[e.DXFTYPE] +=1
@@ -17,118 +17,117 @@ def summaryDump(msp):
     no=0
     for (key,value) in keySorted:
         no +=1
-        filePrint(f"{no} 図形({key}) 配置数({value})")
-    filePrint(" ")
+        filePrint(dmpF,f"{no} 図形({key}) 配置数({value})")
+    filePrint(dmpF," ")
 
-def attrDump(e):
+def attrDump(e,dmpF):
     for atr in e.attribs:
         if len(atr.dxf.text) > 0:
-            filePrint(
+            filePrint(dmpF,
                 f"       Lay({atr.dxf.layer}) Tag({atr.dxf.tag}) Txt({atr.dxf.text}) "
                 f"xya({atr.dxf.insert.vec2.x},{atr.dxf.insert.vec2.y},{atr.dxf.rotation})")
 
 
-def insertDump(msp):
+def insertDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- INSERT サマリー ----------")
+    filePrint(dmpF,f"#-------------- INSERT サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="INSERT":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) name({e.dxf.name}) "
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) name({e.dxf.name}) "
                       f"xya({e.dxf.insert.vec2.x},{e.dxf.insert.vec2.y},{e.dxf.rotation})")
-            attrDump(e)
-    filePrint(" ")
+            attrDump(e,dmpF)
+    filePrint(dmpF," ")
 
-def textDump(msp):
+def textDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- TEXT サマリー ----------")
+    filePrint(dmpF,f"#-------------- TEXT サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="TEXT":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) Txt({e.dxf.text}) rot({e.dxf.rotation}) "
                       f"xya({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")
-    filePrint(" ")
+    filePrint(dmpF," ")
 
-def lineDump(msp):
+def lineDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- LINE サマリー ----------")
+    filePrint(dmpF,f"#-------------- LINE サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="LINE":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
-    filePrint(" ")
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) St({e.dxf.start.x},{e.dxf.start.y}) Ed({e.dxf.end.x},{e.dxf.end.y})")
+    filePrint(dmpF," ")
 
-def lwpolylineDump(msp):
+def lwpolylineDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- LWPOLYLINE サマリー ----------")
+    filePrint(dmpF,f"#-------------- LWPOLYLINE サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="LWPOLYLINE":
             no += 1
             pts = e.lwpoints.values
-            filePrint(f"{no} Lay({e.dxf.layer}) Pts({list(pts)})")
-    filePrint(" ")
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) Pts({list(pts)})")
+    filePrint(dmpF," ")
 
-def mtextDump(msp):
+def mtextDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- MTEXT サマリー ----------")
+    filePrint(dmpF,f"#-------------- MTEXT サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="MTEXT":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) Txt({e.text}) "
-                      f"({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.})")
-    filePrint(" ")
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) Txt({e.text}) "
+                      f"({e.dxf.insert.x},{e.dxf.insert.y},{e.dxf.rotation})")
+    filePrint(dmpF," ")
 
-def pointDump(msp):
+def pointDump(msp,dmpF):
     no=0
-    filePrint(f"#-------------- POINT サマリー ----------")
+    filePrint(dmpF,f"#-------------- POINT サマリー ----------")
     for e in msp:
         if e.DXFTYPE=="POINT":
             no += 1
-            filePrint(f"{no} Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y},{e.dxf.rotation})")
-    filePrint(" ")
+            filePrint(dmpF,f"{no} Lay({e.dxf.layer}) ({e.dxf.location.x},{e.dxf.location.y},{e.dxf.rotation})")
+    filePrint(dmpF," ")
 
-def entityDump(dxfFile):
-    doc = ezdxf.readfile(dxfFile)
+def oneFileEntityDump(doc, dmpF):
     msp = doc.modelspace()
     #
-    summaryDump(msp)
+    summaryDump(msp, dmpF)
     #
-    insertDump(msp)
-    lineDump(msp)
-    lwpolylineDump(msp)
-    mtextDump(msp)
-    pointDump(msp)
-    textDump(msp)
+    insertDump(msp, dmpF)
+    lineDump(msp, dmpF)
+    lwpolylineDump(msp, dmpF)
+    mtextDump(msp, dmpF)
+    pointDump(msp, dmpF)
+    textDump(msp, dmpF)
     #
     return
 
-def mainDump(dxfPat):
+def mainDump(dxfPat,dmpFile="dxf_entity.txt"):
     global gDumpF
-    gDumpF =  open("dxf_entity.txt", "w")    
+    gDumpF =  open(dmpFile, "w")    
     #   
     blockSummary = dict()
     cnt=0
     for dxfFile in glob.glob(dxfPat):
         cnt +=1
-        filePrint(f"-------------- {cnt} : {dxfFile} ----------")
+        filePrint(gDumpF,f"-------------- {cnt} : {dxfFile} ----------")
+        doc = ezdxf.readfile(dxfFile)
         try:
-            entityDump(dxfFile)
+            oneFileEntityDump(doc, gDumpF)
         except Exception as e:
-            filePrint(f"mainDump:{e}")
+            filePrint(gDumpF,f"mainDump:{e}")
             pass
 
     keySorted = sorted(blockSummary.items(), key=lambda x: x[0])
     no=0
     for (key,value) in keySorted:
         no +=1
-        filePrint(f"block{no}={key} : {value}")
+        filePrint(gDumpF,f"block{no}={key} : {value}")
     #
     gDumpF.close()
     
-def filePrint(str):
-    global gDumpF
+def filePrint(dmpF,str):
     print(str)
-    gDumpF.write(str + "\n")
+    dmpF.write(str + "\n")
 
 
 if __name__ == '__main__':

@@ -64,7 +64,7 @@ def filePrint(str):
 if __name__ == '__main__':
     print(os.getcwd())
     if len(sys.argv) < 2:
-        dxdFile = "sample/*.dxf"
+        dxdFile = "sample/Zu03.dxf"
     else:
         dxdFile = sys.argv[1]
     print(f"Start {dxdFile}")

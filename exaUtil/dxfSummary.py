@@ -20,16 +20,18 @@ import PngUtil
 #
 import exaUtil.dxf_blockDump
 import exaUtil.dxf_entityDump
-#import exaUtil.dxf_insertDump
-#import exaUtil.dxf_layerDump
-#import exaUtil.dxf_symbolDump
-#import exaUtil.makeCableLink
 
 
+#<summary>
+#  フォルダー検索結果表示
+#</summary>
 class Window(QDialog):
     global gSearchFld
     global gOutFld
     
+    # ----------------------------------------------------
+    #    コンストラクタ
+    # ----------------------------------------------------
     def __init__(self, parent=None):
         super(Window, self).__init__(parent)
         # closeボタン
@@ -138,6 +140,9 @@ class Window(QDialog):
     # ----------------------------------------------------
     #    dxf/png 検索　フォルダー指定
     # ----------------------------------------------------
+    #<summary>
+    #  ボタン作成
+    #</summary>
     def browse(self):
         global gSearchFld
         #

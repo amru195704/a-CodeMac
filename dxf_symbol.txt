@@ -1,0 +1,18 @@
+-------------- 1 : sample/Zu03.dxf ----------
+block1=*Model_Space : 1
+block2=*Paper_Space : 1
+block3=CL_CL1 : 1
+block4=CL_CL2 : 1
+block5=CL_CL8 : 1
+block6=CL_DCL4 : 1
+block7=CL_DCL8 : 1
+block8=D_P : 1
+block9=HE_HE1 : 1
+block10=J_BUN : 1
+block11=J_SP : 1
+block12=NODE_NODE1 : 1
+block13=NODE_ONU1 : 1
+block14=N_CP : 1
+block15=T_BUN : 1
+block16=T_CP : 1
+block17=T_WP : 1
